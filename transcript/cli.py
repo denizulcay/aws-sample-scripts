@@ -1,4 +1,5 @@
 from transcript.player import play_audio
+from transcript.recorder import record_audio
 from transcript.transcriber import Transcriber
 from transcript.speaker import SpeakEventHandler
 import asyncio
@@ -14,12 +15,12 @@ from time import time
 # print(f"Time taken: {time_delta}")
 
 
-SAMPLE_RATE = 48000
-CHUNK_SIZE = 10240 * 8
-AUDIO_PATH = "/Users/denizulcay/code/local/aws-sample-scripts/resources/recording.wav"
-
+SAMPLE_RATE = 16000
+CHUNK_SIZE = 1024 * 8
+AUDIO_PATH = "/Users/denizulcay/code/local/aws-sample-scripts/resources/test2.wav"
 
 start_time = time()
+record_audio(AUDIO_PATH)
 transcriber = Transcriber("us-east-2", SpeakEventHandler)
 loop = asyncio.get_event_loop()
 loop.run_until_complete(
