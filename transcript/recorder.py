@@ -16,6 +16,7 @@ def record_audio(path):
     except KeyboardInterrupt:
         recorder.stop()
         with wave.open(path, 'w') as f:
+            # (nchannels, sampwidth, framerate, nframes, comptype, compname)
             f.setparams((1, 2, 16000, 512, "NONE", "NONE"))
             f.writeframes(struct.pack("h" * len(audio), *audio))
     finally:
