@@ -1,23 +1,22 @@
-import struct
-
 from pvrecorder import PvRecorder
-import wave
 
 
-def record_audio(path):
-    recorder = PvRecorder(device_index=-1, frame_length=512)
-    audio = []
-    try:
-        recorder.start()
+class Recorder:
+    def __init__(self):
+        self._recorder = PvRecorder(device_index=-1, frame_length=512)
 
-        while True:
-            frame = recorder.read()
-            audio.extend(frame)
-    except KeyboardInterrupt:
-        recorder.stop()
-        with wave.open(path, 'w') as f:
-            # (nchannels, sampwidth, framerate, nframes, comptype, compname)
-            f.setparams((1, 2, 16000, 512, "NONE", "NONE"))
-            f.writeframes(struct.pack("h" * len(audio), *audio))
-    finally:
-        recorder.delete()
+    def __enter__(self):
+        return self
+
+    def start_recording(self):
+        self._recorder.start()
+
+    def read_recording(self):
+        return self._recorder.read()
+
+    def stop_recording(self):
+        self._recorder.stop()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._recorder.stop()
+        self._recorder.delete()
