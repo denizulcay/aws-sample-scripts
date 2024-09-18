@@ -1,3 +1,4 @@
+import webbrowser
 from os import remove, path, system
 
 import boto3
@@ -39,8 +40,6 @@ class SpeakEventHandler(TranscriptResultStreamHandler):
         self._person = None
 
     async def handle_transcript_event(self, transcript_event: TranscriptEvent):
-        # This handler can be implemented to handle transcriptions as needed.
-        # Here's an example to get started.
         results = transcript_event.transcript.results
         for result in results:
             for alt in result.alternatives:
@@ -51,7 +50,7 @@ class SpeakEventHandler(TranscriptResultStreamHandler):
                         play_audio(DST_PATH)
 
                     elif alt.transcript in ["Julia.", "Julia", "Julia,"]:
-                        self._speaker.text_to_audio("I am listening.")
+                        self._speaker.text_to_audio("I'm listening.")
                         play_audio(DST_PATH)
 
                     elif alt.transcript.startswith("Hey, Julia, my name is "):
@@ -70,6 +69,11 @@ class SpeakEventHandler(TranscriptResultStreamHandler):
                         play_audio(DST_PATH)
                         system("osascript -e 'quit app \"Google Chrome\"'")
 
+                    elif alt.transcript == "Launch my workspace.":
+                        self._speaker.text_to_audio("Launching your workspace.")
+                        play_audio(DST_PATH)
+                        (webbrowser.get("open -a /Applications/Google\ Chrome.app %s").open("https://myworkspace.jpmchase.com"))
+
                     elif alt.transcript == "Where are my slippers?":
                         self._speaker.text_to_audio("They are under the bed.")
                         play_audio(DST_PATH)
@@ -81,7 +85,7 @@ class SpeakEventHandler(TranscriptResultStreamHandler):
                         play_audio(DST_PATH)
 
                     elif alt.transcript.startswith("Remind me to "):
-                        text = alt.transcript.strip("Remind me to ").capitalize()
+                        text = alt.transcript.replace("Remind me to ", "").replace("my", "your").capitalize()
 
                         with open(self._notes_path, "a") as file:
                             file.write(f"{text}\n")
