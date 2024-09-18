@@ -1,9 +1,10 @@
-from os import remove, path
+from os import remove, path, system
 
 import boto3
 from amazon_transcribe.handlers import TranscriptResultStreamHandler
 from amazon_transcribe.model import TranscriptEvent, TranscriptResultStream
 
+from joker.joker import Joker
 from transcript.player import play_audio
 from transcript.translator import Translator
 
@@ -33,7 +34,9 @@ class SpeakEventHandler(TranscriptResultStreamHandler):
         super().__init__(transcript_result_stream)
         self._speaker = Speaker()
         self._translator = Translator()
+        self._joker = Joker()
         self._notes_path = "/Users/denizulcay/code/local/aws-sample-scripts/resources/notes/my_notes.txt"
+        self._person = None
 
     async def handle_transcript_event(self, transcript_event: TranscriptEvent):
         # This handler can be implemented to handle transcriptions as needed.
@@ -47,47 +50,65 @@ class SpeakEventHandler(TranscriptResultStreamHandler):
                         self._speaker.text_to_audio("Hello! How can I help you today?")
                         play_audio(DST_PATH)
 
-                    if alt.transcript in ["Julia.", "Julia", "Julia,"]:
+                    elif alt.transcript in ["Julia.", "Julia", "Julia,"]:
                         self._speaker.text_to_audio("I am listening.")
                         play_audio(DST_PATH)
 
-                    if (alt.transcript.startswith("Hey, Julia, my name is ")
-                            or alt.transcript.startswith("Hey Julia, my name is ")):
+                    elif alt.transcript.startswith("Hey, Julia, my name is "):
                         name = alt.transcript.strip("Hey, Julia, my name is ").strip(".").capitalize()
-                        self._speaker.text_to_audio(f"Hello {name}! How can I help you today?")
+                        self._person = name
+                        self._speaker.text_to_audio(f"Hello {self._person}! How can I help you today?")
                         play_audio(DST_PATH)
 
-                    if alt.transcript == "Where are my slippers?":
+                    elif alt.transcript == "Launch Chrome browser.":
+                        self._speaker.text_to_audio("Launching Chrome Browser.")
+                        play_audio(DST_PATH)
+                        system("open /Applications/Google\ Chrome.app")
+
+                    elif alt.transcript in "Kill Chrome browser.":
+                        self._speaker.text_to_audio("Killing Chrome Browser.")
+                        play_audio(DST_PATH)
+                        system("osascript -e 'quit app \"Google Chrome\"'")
+
+                    elif alt.transcript == "Where are my slippers?":
                         self._speaker.text_to_audio("They are under the bed.")
                         play_audio(DST_PATH)
 
-                    if alt.transcript == "Read my notes.":
+                    elif alt.transcript == "Read my notes.":
                         with open(self._notes_path, "r") as file:
                             notes = file.read()
                         self._speaker.text_to_audio(notes)
                         play_audio(DST_PATH)
 
-                    if alt.transcript.startswith("Remind me to "):
+                    elif alt.transcript.startswith("Remind me to "):
                         text = alt.transcript.strip("Remind me to ").capitalize()
 
                         with open(self._notes_path, "a") as file:
-                            file.write("\n")
-                            file.write(text)
+                            file.write(f"{text}\n")
 
                         self._speaker.text_to_audio(f"I will remind you to {text}")
                         play_audio(DST_PATH)
 
-                    if alt.transcript == "Clear my notes.":
-                        with open(self._notes_path, "w") as file:
-                            file.write("")
+                    elif alt.transcript == "Clear my notes.":
+                        remove(self._notes_path)
                         self._speaker.text_to_audio("I cleared your notes for you.")
                         play_audio(DST_PATH)
 
-                    if alt.transcript == "Tell me a joke.":
-                        self._speaker.text_to_audio("Why do cows wear bells? Because their horns don't work. Ha Ha Ha.")
+                    elif alt.transcript == "Tell me a joke.":
+                        joke = self._joker.tell_joke()
+                        self._speaker.text_to_audio(f"{joke} Ha Ha Ha.")
                         play_audio(DST_PATH)
 
-                    if alt.transcript == "Power off.":
-                        self._speaker.text_to_audio("Goodbye!")
+                    elif alt.transcript == "Power off.":
+                        if self._person:
+                            self._speaker.text_to_audio(f"Goodbye {self._person}!")
+                        else:
+                            self._speaker.text_to_audio(f"Goodbye!")
                         play_audio(DST_PATH)
                         raise NotImplementedError()
+
+                    # else:
+                    #     self._speaker.text_to_audio(
+                    #         "I don't have all the answers. I'm just a computer program you know..."
+                    #     )
+                    #     play_audio(DST_PATH)
