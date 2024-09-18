@@ -53,8 +53,8 @@ class SpeakEventHandler(TranscriptResultStreamHandler):
                         self._speaker.text_to_audio("I'm listening.")
                         play_audio(DST_PATH)
 
-                    elif alt.transcript.startswith("Hey, Julia, my name is "):
-                        name = alt.transcript.strip("Hey, Julia, my name is ").strip(".").capitalize()
+                    elif alt.transcript.startswith("My name is "):
+                        name = alt.transcript.replace("My name is ", "").strip(".").capitalize()
                         self._person = name
                         self._speaker.text_to_audio(f"Hello {self._person}! How can I help you today?")
                         play_audio(DST_PATH)
