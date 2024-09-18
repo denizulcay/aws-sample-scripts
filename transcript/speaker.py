@@ -1,9 +1,10 @@
-from os import remove
+from os import remove, path
 
 import boto3
 from amazon_transcribe.handlers import TranscriptResultStreamHandler
 from amazon_transcribe.model import TranscriptEvent, TranscriptResultStream
 
+from transcript.player import play_audio
 from transcript.translator import Translator
 
 DST_PATH = '/Users/denizulcay/code/local/aws-sample-scripts/resources/speech.mp3'
@@ -12,16 +13,18 @@ DST_PATH = '/Users/denizulcay/code/local/aws-sample-scripts/resources/speech.mp3
 class Speaker(object):
     def __init__(self):
         self._client = boto3.Session(region_name='us-west-2').client('polly')
-        remove(DST_PATH)
+        if path.exists(DST_PATH):
+            remove(DST_PATH)
 
     def text_to_audio(self, text: str):
         response = self._client.synthesize_speech(
-            VoiceId='Filiz',
+            VoiceId='Joanna',
+            # VoiceId='',
             OutputFormat='mp3',
             Text=text,
-            Engine='standard'
+            Engine='neural'
         )
-        file = open(DST_PATH, 'ab')
+        file = open(DST_PATH, 'wb')
         file.write(response['AudioStream'].read())
         file.close()
 
@@ -39,5 +42,6 @@ class SpeakEventHandler(TranscriptResultStreamHandler):
         for result in results:
             for alt in result.alternatives:
                 if not result.is_partial:
-                    text = self._translator.translate(alt.transcript)
-                    self._speaker.text_to_audio(text)
+                    # text = self._translator.translate(alt.transcript)
+                    self._speaker.text_to_audio(alt.transcript)
+                    play_audio(DST_PATH)
