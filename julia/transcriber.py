@@ -1,7 +1,6 @@
 import asyncio
 import struct
 
-import aiofile
 from amazon_transcribe.client import TranscribeStreamingClient
 
 
@@ -10,7 +9,7 @@ class Transcriber:
         self._client = TranscribeStreamingClient(region=region)
         self._handler_class = handler_class
 
-    async def basic_transcribe(self, sample_rate: int, audio_path: str, chunk_size: int, recorder):
+    async def basic_transcribe(self, sample_rate: int, recorder):
         # Start transcription to generate our async stream
         stream = await self._client.start_stream_transcription(
             language_code="en-US",
