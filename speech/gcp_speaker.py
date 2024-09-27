@@ -13,3 +13,8 @@ class GcpSpeaker(Speaker):
     def text_to_audio(self, text: str):
         with open(DST_PATH, 'wb') as f:
             f.write(self._client.synthesize_speech(text))
+
+
+speaker = GcpSpeaker()
+
+speaker.text_to_audio("Hello Eren, my name is Julia. How may I help you today.")

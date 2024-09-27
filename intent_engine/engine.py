@@ -1,11 +1,7 @@
-
-from speech.aws_speaker import AwsSpeaker
-from util.text import clean_text
 from intent_engine._const import _CLASSIFY_MAP
 
 
 class IntentEngine:
-    _speaker = AwsSpeaker()
     _notes_path = "/Users/denizulcay/code/local/aws-sample-scripts/resources/notes/my_notes.txt"
     _person = None
 
@@ -14,6 +10,7 @@ class IntentEngine:
         for key, value in _CLASSIFY_MAP.items():
             if value(text):
                 return key
+        return None
         # if text == "hey julia":
         #     cls._speaker.text_to_audio("Hello! How can I help you today?")
         #     play_audio(DST_PATH)

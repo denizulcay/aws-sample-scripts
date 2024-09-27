@@ -1,42 +1,39 @@
-
+RATE = 16000
+CHUNK = int(RATE / 10)  # 100ms
 import queue
 import re
 import sys
-from struct import unpack_from
 
 from google.cloud import speech
 
 import pyaudio
 
-# Audio recording parameters
-
-
 class MicrophoneStream:
     """Opens a recording stream as a generator yielding the audio chunks."""
 
-    def __init__(self, rate: int, chunk: int, handler):
+    def __init__(self: object, rate: int = RATE, chunk: int = CHUNK) -> None:
         """The audio -- and generator -- is guaranteed to be on the main thread."""
         self._rate = rate
         self._chunk = chunk
-        self._handler = handler
 
         # Create a thread-safe buffer of audio data
         self._buff = queue.Queue()
         self.closed = True
 
-    def __enter__(self):
+    def __enter__(self: object) -> object:
         self._audio_interface = pyaudio.PyAudio()
         self._audio_stream = self._audio_interface.open(
             format=pyaudio.paInt16,
             # The API currently only supports 1-channel (mono) audio
             # https://goo.gl/z757pE
             channels=1,
-            rate=self._handler.sample_rate,
+            rate=self._rate,
             input=True,
-            frames_per_buffer=self._handler.frame_length
+            frames_per_buffer=self._chunk,
             # Run the audio stream asynchronously to fill the buffer object.
             # This is necessary so that the input device's buffer doesn't
             # overflow while the calling thread makes network requests, etc.
+            stream_callback=self._fill_buffer,
         )
 
         self.closed = False
@@ -44,11 +41,11 @@ class MicrophoneStream:
         return self
 
     def __exit__(
-            self,
+            self: object,
             type: object,
             value: object,
             traceback: object,
-    ):
+    ) -> None:
         """Closes the stream, regardless of whether the connection was lost or not."""
         self._audio_stream.stop_stream()
         self._audio_stream.close()
@@ -57,11 +54,6 @@ class MicrophoneStream:
         # streaming_recognize method will not block the process termination.
         self._buff.put(None)
         self._audio_interface.terminate()
-
-    def read(self):
-        pcm = self._audio_stream.read(self._handler.frame_length, exception_on_overflow=False)
-        # Convert audio data to the required format
-        return pcm
 
     def _fill_buffer(
             self: object,
