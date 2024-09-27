@@ -11,30 +11,44 @@ import pyaudio
 class MicrophoneStream:
     """Opens a recording stream as a generator yielding the audio chunks."""
 
-    def __init__(self: object, rate: int = RATE, chunk: int = CHUNK) -> None:
+    def __init__(self: object, rate: int = RATE, chunk: int = CHUNK, handler = None) -> None:
         """The audio -- and generator -- is guaranteed to be on the main thread."""
         self._rate = rate
         self._chunk = chunk
-
+        self._handler = handler
         # Create a thread-safe buffer of audio data
         self._buff = queue.Queue()
         self.closed = True
 
     def __enter__(self: object) -> object:
         self._audio_interface = pyaudio.PyAudio()
-        self._audio_stream = self._audio_interface.open(
-            format=pyaudio.paInt16,
-            # The API currently only supports 1-channel (mono) audio
-            # https://goo.gl/z757pE
-            channels=1,
-            rate=self._rate,
-            input=True,
-            frames_per_buffer=self._chunk,
-            # Run the audio stream asynchronously to fill the buffer object.
-            # This is necessary so that the input device's buffer doesn't
-            # overflow while the calling thread makes network requests, etc.
-            stream_callback=self._fill_buffer,
-        )
+        if not self._handler:
+            self._audio_stream = self._audio_interface.open(
+                format=pyaudio.paInt16,
+                # The API currently only supports 1-channel (mono) audio
+                # https://goo.gl/z757pE
+                channels=1,
+                rate=self._rate,
+                input=True,
+                frames_per_buffer=self._chunk,
+                # Run the audio stream asynchronously to fill the buffer object.
+                # This is necessary so that the input device's buffer doesn't
+                # overflow while the calling thread makes network requests, etc.
+                stream_callback=self._fill_buffer,
+            )
+        else:
+            self._audio_stream = self._audio_interface.open(
+                format=pyaudio.paInt16,
+                # The API currently only supports 1-channel (mono) audio
+                # https://goo.gl/z757pE
+                channels=1,
+                rate=self._handler.sample_rate,
+                input=True,
+                frames_per_buffer=self._handler.frame_length,
+                # Run the audio stream asynchronously to fill the buffer object.
+                # This is necessary so that the input device's buffer doesn't
+                # overflow while the calling thread makes network requests, etc
+            )
 
         self.closed = False
 
@@ -105,3 +119,6 @@ class MicrophoneStream:
                     break
 
             yield b"".join(data)
+
+    def read(self):
+        return self._audio_stream.read(self._handler.frame_length, exception_on_overflow=False)

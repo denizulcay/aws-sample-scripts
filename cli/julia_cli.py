@@ -15,14 +15,15 @@ CHUNK = int(RATE / 10)  # 100ms
 
 def main():
     wake_listener = Listener()
+    client = SpeechToTextClient()
+    handler = IntentEventHandler()
+    wake_up = False
+    with MicrophoneStream(RATE, FRAME_LENGTH, wake_listener._handler) as stream:
+        while not wake_up:
+            wake_up = wake_listener.wake_up(stream.read())
+
     with MicrophoneStream(RATE, FRAME_LENGTH) as stream:
-        client = SpeechToTextClient()
-        handler = IntentEventHandler()
-        # while True:
-            # wake_up = wake_listener.wake_up(stream.read())
-            # if wake_up:
-            #     play_audio(AUDIO_PATH)
-            #     while wake_up:
+        play_audio(AUDIO_PATH)
         try:
             responses = client.transcribee(stream.generator())
             handler.handle(responses)
