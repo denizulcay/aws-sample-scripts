@@ -16,13 +16,7 @@ class SpeechToTextClient:
             interim_results=True
         )
 
-    def transcribe(self, audio_chunk):
-        requests = [StreamingRecognizeRequest(audio_content=audio_chunk)]
-        responses = self._client.streaming_recognize(self._streaming_config, requests)
-
-        return responses
-
-    def transcribee(self, generator):
+    def transcribe(self, generator):
         requests = (
             StreamingRecognizeRequest(audio_content=content)
             for content in generator

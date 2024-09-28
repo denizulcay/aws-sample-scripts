@@ -6,7 +6,7 @@ from task_registry.task._base import CallableResult
 from util.text import clean_text
 
 DST_PATH = '/Users/denizulcay/code/local/aws-sample-scripts/resources/speech.wav'
-
+SORRY_PATH = '/Users/denizulcay/code/local/aws-sample-scripts/resources/wake_word/sorry.wav'
 
 # class IntentEventHandler(TranscriptResultStreamHandler):
 #     def __init__(self, transcript_result_stream: TranscriptResultStream):
@@ -57,3 +57,6 @@ class IntentEventHandler:
                         response.result.callback_function(**response.result.kwargs)
                     self._speaker.text_to_audio(response.result.reply)
                     play_audio(DST_PATH)
+                    raise EOFError()
+                else:
+                    play_audio(SORRY_PATH)

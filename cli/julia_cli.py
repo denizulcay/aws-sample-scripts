@@ -17,19 +17,21 @@ def main():
     wake_listener = Listener()
     client = SpeechToTextClient()
     handler = IntentEventHandler()
-    wake_up = False
-    with MicrophoneStream(RATE, FRAME_LENGTH, wake_listener._handler) as stream:
-        while not wake_up:
-            wake_up = wake_listener.wake_up(stream.read())
-
-    with MicrophoneStream(RATE, FRAME_LENGTH) as stream:
-        play_audio(AUDIO_PATH)
-        try:
-            responses = client.transcribee(stream.generator())
-            handler.handle(responses)
-        except Exception as e:
-            print(e)
-            raise e
+    while True:
+        wake_up = False
+        with MicrophoneStream(wake_listener._handler.sample_rate, wake_listener._handler.frame_length, has_callback=False) as stream:
+            while not wake_up:
+                wake_up = wake_listener.wake_up(stream.read())
+        session = True
+        with MicrophoneStream(RATE, FRAME_LENGTH) as stream:
+            while session:
+                play_audio(AUDIO_PATH)
+                try:
+                    responses = client.transcribe(stream.generator())
+                    handler.handle(responses)
+                except EOFError as e:
+                    print(e)
+                    session = False
 
 
 if __name__ == "__main__":

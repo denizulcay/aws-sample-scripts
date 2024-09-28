@@ -1,114 +1,68 @@
-RATE = 16000
-CHUNK = int(RATE / 10)  # 100ms
 import queue
-import re
-import sys
-
-from google.cloud import speech
 
 import pyaudio
 
-class MicrophoneStream:
-    """Opens a recording stream as a generator yielding the audio chunks."""
 
-    def __init__(self: object, rate: int = RATE, chunk: int = CHUNK, handler = None) -> None:
-        """The audio -- and generator -- is guaranteed to be on the main thread."""
-        self._rate = rate
-        self._chunk = chunk
-        self._handler = handler
-        # Create a thread-safe buffer of audio data
+class MicrophoneStream:
+    def __init__(self, sample_rate: int, frame_length: int, has_callback=True):
+        self._sample_rate = sample_rate
+        self._frame_length = frame_length
+        self._has_callback = has_callback
         self._buff = queue.Queue()
         self.closed = True
 
-    def __enter__(self: object) -> object:
+    def __enter__(self):
         self._audio_interface = pyaudio.PyAudio()
-        if not self._handler:
+        if self._has_callback:
             self._audio_stream = self._audio_interface.open(
                 format=pyaudio.paInt16,
-                # The API currently only supports 1-channel (mono) audio
-                # https://goo.gl/z757pE
                 channels=1,
-                rate=self._rate,
+                rate=self._sample_rate,
                 input=True,
-                frames_per_buffer=self._chunk,
-                # Run the audio stream asynchronously to fill the buffer object.
-                # This is necessary so that the input device's buffer doesn't
-                # overflow while the calling thread makes network requests, etc.
+                frames_per_buffer=self._frame_length,
                 stream_callback=self._fill_buffer,
             )
         else:
             self._audio_stream = self._audio_interface.open(
                 format=pyaudio.paInt16,
-                # The API currently only supports 1-channel (mono) audio
-                # https://goo.gl/z757pE
                 channels=1,
-                rate=self._handler.sample_rate,
+                rate=self._sample_rate,
                 input=True,
-                frames_per_buffer=self._handler.frame_length,
-                # Run the audio stream asynchronously to fill the buffer object.
-                # This is necessary so that the input device's buffer doesn't
-                # overflow while the calling thread makes network requests, etc
+                frames_per_buffer=self._frame_length
             )
-
         self.closed = False
 
         return self
 
     def __exit__(
-            self: object,
-            type: object,
-            value: object,
-            traceback: object,
-    ) -> None:
-        """Closes the stream, regardless of whether the connection was lost or not."""
+        self,
+        type: object,
+        value: object,
+        traceback: object,
+    ):
         self._audio_stream.stop_stream()
         self._audio_stream.close()
         self.closed = True
-        # Signal the generator to terminate so that the client's
-        # streaming_recognize method will not block the process termination.
         self._buff.put(None)
         self._audio_interface.terminate()
 
     def _fill_buffer(
-            self: object,
-            in_data: object,
-            frame_count: int,
-            time_info: object,
-            status_flags: object,
-    ) -> object:
-        """Continuously collect data from the audio stream, into the buffer.
-
-        Args:
-            in_data: The audio data as a bytes object
-            frame_count: The number of frames captured
-            time_info: The time information
-            status_flags: The status flags
-
-        Returns:
-            The audio data as a bytes object
-        """
+        self,
+        in_data: object,
+        frame_count: int,
+        time_info: object,
+        status_flags: object,
+    ):
         self._buff.put(in_data)
+
         return None, pyaudio.paContinue
 
-    def generator(self: object) -> object:
-        """Generates audio chunks from the stream of audio data in chunks.
-
-        Args:
-            self: The MicrophoneStream object
-
-        Returns:
-            A generator that outputs audio chunks.
-        """
+    def generator(self):
         while not self.closed:
-            # Use a blocking get() to ensure there's at least one chunk of
-            # data, and stop iteration if the chunk is None, indicating the
-            # end of the audio stream.
             chunk = self._buff.get()
             if chunk is None:
                 return
             data = [chunk]
-
-            # Now consume whatever other data's still buffered.
             while True:
                 try:
                     chunk = self._buff.get(block=False)
@@ -121,4 +75,4 @@ class MicrophoneStream:
             yield b"".join(data)
 
     def read(self):
-        return self._audio_stream.read(self._handler.frame_length, exception_on_overflow=False)
+        return self._audio_stream.read(self._frame_length, exception_on_overflow=False)
