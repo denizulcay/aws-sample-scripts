@@ -10,6 +10,10 @@ class BaseTaskRequest(BaseModel):
     request_type: str
 
 
+class BaseLongTaskRequest(BaseTaskRequest):
+    request_type: str
+
+
 class BaseTaskResponse(BaseModel):
     response_type: str
     result: Union[ReplyResult, CallableResult]

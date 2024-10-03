@@ -1,8 +1,8 @@
 from julia_sample_scripts.intent_engine.engine import IntentEngine
-from julia_sample_scripts.julia.player import play_audio, play_wav
+from julia_sample_scripts.julia.player import play_wav
 from julia_sample_scripts.speech.gcp_speaker import GcpSpeaker
 from julia_sample_scripts.task_registry.director import TaskDirector, RequestDirector
-from julia_sample_scripts.task_registry.task._base import CallableResult
+from julia_sample_scripts.task_registry.task._base import CallableResult, BaseLongTaskRequest
 from julia_sample_scripts.user.recognition import add_user
 from julia_sample_scripts.util.text import clean_text
 
@@ -30,13 +30,16 @@ class IntentEventHandler:
                 intent = IntentEngine.resolve(text=text)
                 if intent:
                     request = RequestDirector.handle(intent=intent, text=text)
+                    if isinstance(request, BaseLongTaskRequest):
+                        audio = self._speaker.text_to_audio("Let me find out.")
+                        play_wav(audio)
                     response = TaskDirector.handle(request)
                     if isinstance(response.result, CallableResult):
                         response.result.callback_function(**response.result.kwargs)
                     audio = self._speaker.text_to_audio(response.result.reply)
-                    return audio
-                    # play_wav(audio)
-                    # raise EOFError()
+                    # return audio
+                    play_wav(audio)
+                    raise EOFError()
                 # else:
                 #     play_audio(SORRY_PATH)
                 #     raise EOFError()
