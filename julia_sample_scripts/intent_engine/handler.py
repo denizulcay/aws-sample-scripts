@@ -37,9 +37,9 @@ class IntentEventHandler:
                     if isinstance(response.result, CallableResult):
                         response.result.callback_function(**response.result.kwargs)
                     audio = self._speaker.text_to_audio(response.result.reply)
-                    # return audio
-                    play_wav(audio)
-                    raise EOFError()
+                    return audio
+                    # play_wav(audio)
+                    # raise EOFError()
                 # else:
                 #     play_audio(SORRY_PATH)
                 #     raise EOFError()

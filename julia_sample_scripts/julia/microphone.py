@@ -74,5 +74,8 @@ class MicrophoneStream:
 
             yield b"".join(data)
 
-    def read(self):
-        return self._audio_stream.read(self._frame_length, exception_on_overflow=False)
+    def read(self, length=None):
+        if not length:
+            return self._audio_stream.read(self._frame_length, exception_on_overflow=False)
+        else:
+            return self._audio_stream.read(length, exception_on_overflow=False)
