@@ -9,7 +9,7 @@ vad = webrtcvad.Vad()
 # Run the VAD on 10 ms of silence. The result should be False.
 sample_rate = 16000
 frame_duration = 30  # ms
-SPEECH_FL = int(sample_rate * frame_duration / 1000)
+SPEECH_FL = int(sample_rate * frame_duration / 1000)  # 480
 
 speech_ctr = 0
 wake_listener = Listener()
@@ -27,7 +27,7 @@ awake = False
 speaking = False
 listening = False
 
-with MicrophoneStream(SAMPLE_RATE, FRAME_LENGTH, has_callback=False) as stream:
+with MicrophoneStream(SAMPLE_RATE, FRAME_LENGTH) as stream:
     while True:
         audio = stream.read(SPEECH_FL)
         is_speech = vad.is_speech(audio, SAMPLE_RATE)
