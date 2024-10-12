@@ -14,13 +14,12 @@ class IntentEventHandler:
     def __init__(self):
         self._speaker = GcpSpeaker()
 
-    def handle(self, responses):
-        for response in responses:
+    def handle(self, response):
             if not response.results:
-                continue
+                return
             result = response.results[0]
             if not result.alternatives:
-                continue
+                return
 
             transcript = result.alternatives[0].transcript
 
@@ -37,12 +36,8 @@ class IntentEventHandler:
                     if isinstance(response.result, CallableResult):
                         response.result.callback_function(**response.result.kwargs)
                     audio = self._speaker.text_to_audio(response.result.reply)
+
                     return audio
-                    # play_wav(audio)
-                    # raise EOFError()
-                # else:
-                #     play_audio(SORRY_PATH)
-                #     raise EOFError()
 
     def handle_new_user(self, responses):
         for response in responses:

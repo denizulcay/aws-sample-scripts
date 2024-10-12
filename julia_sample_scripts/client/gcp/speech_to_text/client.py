@@ -16,7 +16,7 @@ class SpeechToTextClient:
             interim_results=True
         )
 
-    def transcribe(self, generator):
+    def transcribe_stream(self, generator):
         requests = (
             StreamingRecognizeRequest(audio_content=content)
             for content in generator
@@ -29,5 +29,9 @@ class SpeechToTextClient:
         audio = RecognitionAudio(content=audio_chunk)
         response = self._client.recognize(config=self._config, audio=audio)
 
-        for result in response.results:
-            print(f"Transcript: {result.alternatives[0].transcript}")
+        if response.results:
+            result = response.results[0].alternatives[0].transcript
+        else:
+            result = None
+
+        return result

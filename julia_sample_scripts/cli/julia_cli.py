@@ -5,14 +5,14 @@ from julia_sample_scripts.julia.microphone import MicrophoneStream
 from julia_sample_scripts.julia.player import play_wav
 from julia_sample_scripts.user.recognition import recognize_user
 
-from julia_sample_scripts.wake_word.listener import Listener
+from julia_sample_scripts.wake_word.wakewordclient import WakeWordClient
 
 SAMPLE_RATE = 16000
 FRAME_LENGTH = 512
 
 
 def main():
-    wake_listener = Listener()
+    wake_listener = WakeWordClient()
     client = SpeechToTextClient()
     speech_client = TextToSpeechClient()
     handler = IntentEventHandler()
@@ -24,7 +24,7 @@ def main():
             )
             play_wav(speech)
             try:
-                responses = client.transcribe(stream.generator())
+                responses = client.transcribe_stream(stream.generator())
                 handler.handle_new_user(responses)
             except EOFError as e:
                 pass
@@ -40,7 +40,7 @@ def main():
             try:
                 speech = speech_client.synthesize_speech(f"Hello {user}.")
                 play_wav(speech)
-                responses = client.transcribe(stream.generator())
+                responses = client.transcribe_stream(stream.generator())
                 handler.handle(responses)
             except EOFError as e:
                 awake = False

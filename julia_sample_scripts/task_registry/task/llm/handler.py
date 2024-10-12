@@ -12,7 +12,7 @@ class LlmHandler(BaseTaskHandler):
 
     def handle(self, request: GetLlmAnswerRequest) -> GetLlmAnswerResponse:
         answer = self._client.generate_content(prompt=request.text)
-        answer = answer.replace("*", "")
+        answer = answer.replace("", "*").replace("", "#")
         return GetLlmAnswerResponse(
             response_type=GET_LLM_ANSWER_RESPONSE,
             result=ReplyResult(

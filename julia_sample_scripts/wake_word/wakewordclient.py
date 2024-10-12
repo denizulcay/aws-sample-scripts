@@ -5,7 +5,7 @@ import pvporcupine
 access_key = "5VYNKOfZXNH2M0vgdkLpq+6Kukwp92DXYfYDoXd0FPUMtRUmKLpY3A=="
 
 
-class Listener:
+class WakeWordClient:
     def __init__(self):
         self._handler = pvporcupine.create(
             access_key=access_key,

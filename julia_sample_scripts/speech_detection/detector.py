@@ -2,7 +2,7 @@ import webrtcvad
 
 from julia_sample_scripts.cli.julia_cli import SAMPLE_RATE, FRAME_LENGTH
 from julia_sample_scripts.julia.microphone import MicrophoneStream
-from julia_sample_scripts.wake_word.listener import Listener
+from julia_sample_scripts.wake_word.wakewordclient import WakeWordClient
 
 vad = webrtcvad.Vad()
 
@@ -12,7 +12,7 @@ frame_duration = 30  # ms
 SPEECH_FL = int(sample_rate * frame_duration / 1000)  # 480
 
 speech_ctr = 0
-wake_listener = Listener()
+wake_listener = WakeWordClient()
 
 
 def extent_bytes(first, second):

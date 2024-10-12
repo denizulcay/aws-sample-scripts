@@ -2,7 +2,7 @@ import socket
 
 from julia_sample_scripts.client.gcp.text_to_speech.client import TextToSpeechClient
 from julia_sample_scripts.julia.player import play_wav
-from julia_sample_scripts.wake_word.listener import Listener
+from julia_sample_scripts.wake_word.wakewordclient import WakeWordClient
 
 # Server settings
 SERVER_IP = '127.0.0.1'
@@ -18,7 +18,7 @@ print("Waiting for connection...")
 
 conn, addr = server_socket.accept()
 print("Connection established with:", addr)
-wake_listener = Listener()
+wake_listener = WakeWordClient()
 speech_client = TextToSpeechClient()
 
 while True:
